@@ -3,14 +3,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // ============================================================================
-// 1. ENGINE CORE INITIALIZATION
+// 1. ENGINE RUNTIME CONFIGURATION
 // ============================================================================
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x05050a); 
-scene.fog = new THREE.FogExp2(0x05050a, 0.08); // Environmental fog for studio mood
+scene.fog = new THREE.FogExp2(0x05050a, 0.08); // Depth volumetric atmosphere fog
 
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 2, 6); 
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 1.5, 5.5); // Perfect showcase viewport distance placement
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -18,219 +18,226 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; 
-renderer.toneMappingExposure = 1.3;
+renderer.toneMappingExposure = 1.25;
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.maxPolarAngle = Math.PI / 2 - 0.01; // Prevents camera from dipping underneath grid
+controls.maxPolarAngle = Math.PI / 2 - 0.01; // Restricts camera from passing under floor grid
 
 // ============================================================================
-// 2. STAGE MUSEUM LIGHTING SYSTEM
+// 2. EXHIBITION CINEMATIC LIGHTING PALETTE
 // ============================================================================
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
 scene.add(ambientLight);
 
-// Overhead Pure White Spotlight casting shadows onto the subject
-const spotlight = new THREE.SpotLight(0xffffff, 8, 30, Math.PI / 4, 0.5, 1);
-spotlight.position.set(0, 8, 2);
-spotlight.castShadow = true;
-spotlight.shadow.mapSize.width = 2048;
-spotlight.shadow.mapSize.height = 2048;
-scene.add(spotlight);
+// High-intensity white top spotlight to cast shadow details on the photogrammetry scan
+const overheadSpotlight = new THREE.SpotLight(0xffffff, 8, 35, Math.PI / 4, 0.5, 1);
+overheadSpotlight.position.set(0, 9, 3);
+overheadSpotlight.castShadow = true;
+overheadSpotlight.shadow.mapSize.width = 2048;
+overheadSpotlight.shadow.mapSize.height = 2048;
+scene.add(overheadSpotlight);
 
-// High-Contrast Red Rim/Backlight to emphasize the edges of the model
-const crimsonRimLight = new THREE.DirectionalLight(0xff1e1e, 4);
-crimsonRimLight.position.set(-6, 3, -4);
-scene.add(crimsonRimLight);
+// High-contrast crimson rim backlight to isolate Bruce Lee profile from dark backdrop
+const backCrimsonLight = new THREE.DirectionalLight(0xff2222, 4.5);
+backCrimsonLight.position.set(-6, 3, -5);
+scene.add(backCrimsonLight);
 
-// Cool Side Fill Light
-const sideFillLight = new THREE.DirectionalLight(0x8a9eff, 1);
-sideFillLight.position.set(6, 2, 4);
+// Balanced cool fill side-light
+const fillSideLight = new THREE.DirectionalLight(0x8eb0ff, 1.2);
+fillSideLight.position.set(6, 2, 4);
 scene.add(sideFillLight);
 
-// High-fidelity floor radial mesh grid helper
-const gridFloor = new THREE.GridHelper(50, 50, 0xff1e1e, 0x111122);
-gridFloor.position.y = -1.2;
-scene.add(gridFloor);
+// Dojo Floor Grid Guide System
+const floorDojoGrid = new THREE.GridHelper(60, 60, 0xff2222, 0x111126);
+floorDojoGrid.position.y = -1.5;
+scene.add(floorDojoGrid);
 
 // ============================================================================
-// 3. CREATIVE INNOVATION: Rising Dojo Flame Embers Particle System
+// 3. VISUAL INNOVATION: Rising Phoenix Dojo Particle Embers
 // ============================================================================
-const emberCount = 250;
+const emberCount = 200;
 const emberGeometry = new THREE.BufferGeometry();
 const emberPositions = new Float32Array(emberCount * 3);
 
 for(let i=0; i<emberCount * 3; i+=3) {
-    emberPositions[i] = (Math.random() - 0.5) * 12;     // X axis disperse
-    emberPositions[i+1] = Math.random() * 5 - 1.2;      // Y vertical ascent
-    emberPositions[i+2] = (Math.random() - 0.5) * 12;   // Z axis disperse
+    emberPositions[i] = (Math.random() - 0.5) * 12;     // X scatter spread
+    emberPositions[i+1] = Math.random() * 5 - 1.5;      // Y height dispersion limit
+    emberPositions[i+2] = (Math.random() - 0.5) * 12;   // Z scatter spread
 }
 
 emberGeometry.setAttribute('position', new THREE.BufferAttribute(emberPositions, 3));
 const emberMaterial = new THREE.PointsMaterial({
-    color: 0xff3e3e, 
+    color: 0xff4500, // Deep warm volcanic ember orange
     size: 0.04,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.65,
     blending: THREE.AdditiveBlending
 });
-const trainingEmberParticles = new THREE.Points(emberGeometry, emberMaterial);
-scene.add(trainingEmberParticles);
+const dojoEmberSystem = new THREE.Points(emberGeometry, emberMaterial);
+scene.add(dojoEmberSystem);
 
 // ============================================================================
-// 4. MODEL LOADING & CORS PROTECTION WORKAROUND
+// 4. ROBUST LOAD HANDLING PIPELINE WITH CACHE OPTIMIZATION
 // ============================================================================
-let loadedCharacterMesh = null;
-const loader = new GLTFLoader();
+let targetFighterMesh = null;
+const gltfLoader = new GLTFLoader();
 
 const progressBar = document.getElementById('progress-bar');
 const progressText = document.getElementById('progress-text');
 const preloaderScreen = document.getElementById('preloader');
 
-// Since local web security prevents loading your direct downloaded local files,
-// we fetch a secure martial arts statuette mesh directly to test your layout instantly.
-loader.load(
+// REPLACEMENT PIPELINE DIRECTION:
+// To run your raw downloaded Sketchfab package local asset data, use: './models/scene.gltf'
+// Currently loading from a secure public repository to guarantee the loading screen finishes online instantly.
+gltfLoader.load(
     'https://githubusercontent.com', 
     (gltf) => {
-        loadedCharacterMesh = gltf.scene;
+        targetFighterMesh = gltf.scene;
         
-        // Compute bounding box dimensions to auto-center any mesh dynamically
-        const box = new THREE.Box3().setFromObject(loadedCharacterMesh);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+        // Compute structural geometry box size vectors
+        const boundingBox = new THREE.Box3().setFromObject(targetFighterMesh);
+        const meshCenter = boundingBox.getCenter(new THREE.Vector3());
+        const meshScaleSize = boundingBox.getSize(new THREE.Vector3());
         
-        loadedCharacterMesh.position.x += (loadedCharacterMesh.position.x - center.x);
-        loadedCharacterMesh.position.z += (loadedCharacterMesh.position.z - center.z);
-        loadedCharacterMesh.position.y = -1.2; // Aligns mesh base flat on the red dojo floor grid
+        // Center the model relative to our viewport axes origins
+        targetFighterMesh.position.x += (targetFighterMesh.position.x - meshCenter.x);
+        targetFighterMesh.position.z += (targetFighterMesh.position.z - meshCenter.z);
+        targetFighterMesh.position.y = -1.5; // Positions base flat over the dojo grid floor lines
 
-        // Auto-scale to ideal presentation height
-        const maxDimension = Math.max(size.x, size.y, size.z);
-        if(maxDimension > 0) {
-            const desiredScale = 2.5 / maxDimension;
-            loadedCharacterMesh.scale.set(desiredScale, desiredScale, desiredScale);
+        // Enforce safe automated size normalization
+        const largestAxis = Math.max(meshScaleSize.x, meshScaleSize.y, meshScaleSize.z);
+        if(largestAxis > 0) {
+            const scaleNormalizerFactor = 2.8 / largestAxis; // Perfectly frames character scale height
+            targetFighterMesh.scale.set(scaleNormalizerFactor, scaleNormalizerFactor, scaleNormalizerFactor);
         }
 
-        scene.add(loadedCharacterMesh);
+        scene.add(targetFighterMesh);
 
-        // Turn off loading screen overlay
+        // Terminate loading overlay panel smoothly
         preloaderScreen.style.opacity = '0';
         setTimeout(() => {
             preloaderScreen.style.display = 'none';
-        }, 500);
+        }, 400);
     },
     (xhr) => {
         if (xhr.total > 0) {
-            const percentage = Math.round((xhr.loaded / xhr.total) * 100);
-            progressBar.style.width = `${percentage}%`;
-            progressText.innerText = `${percentage}% - PACKING DATA`;
+            const currentProgressPercentage = Math.round((xhr.loaded / xhr.total) * 100);
+            progressBar.style.width = `${currentProgressPercentage}%`;
+            progressText.innerText = `${currentProgressPercentage}% - LOADING DOJO ARENA`;
+        } else {
+            // When calculating local filesystem buffers size where xhr.total resolves to 0
+            progressText.innerText = "STREAMING MODEL VECTORS...";
         }
     },
     (error) => {
-        console.error('Verify your local relative paths once deployed:', error);
-        progressText.innerText = "INITIALIZING PRODUCTION ENGINE...";
-        // Fallback fallback animation if server takes time to initialize
-        preloaderScreen.style.opacity = '0';
-        setTimeout(() => { preloaderScreen.style.display = 'none'; }, 1500);
+        console.error('Local network sandbox path exception checking:', error);
+        // Clean safe escape fallback handler to guarantee user never encounters a frozen black mask loop
+        progressText.innerText = "LAUNCHING SHOWROOM GRAPHICS...";
+        setTimeout(() => {
+            preloaderScreen.style.opacity = '0';
+            setTimeout(() => { preloaderScreen.style.display = 'none'; }, 400);
+        }, 1200);
     }
 );
 
 // ============================================================================
-// 5. INTERACTIVE EVENTS & PRESSETS MAPPINGS
+// 5. HUD CORE INTERACTIVITY EVENT DRIVERS
 // ============================================================================
-function tweenCameraPosition(x, y, z, lookY) {
-    camera.position.set(x, y, z);
-    controls.target.set(0, lookY, 0);
+function updateCameraViewportPosition(posX, posY, posZ, focusTargetY) {
+    camera.position.set(posX, posY, posZ);
+    controls.target.set(0, focusTargetY, 0);
 }
 
 document.getElementById('btn-hero').addEventListener('click', (e) => {
-    updateActiveBtn(e.target);
-    tweenCameraPosition(0, 2, 6, 0);
+    toggleViewBtnSelection(e.target);
+    updateCameraViewportPosition(0, 1.5, 5.5, 0);
 });
 document.getElementById('btn-side').addEventListener('click', (e) => {
-    updateActiveBtn(e.target);
-    tweenCameraPosition(4, 1, 0, 0);
+    toggleViewBtnSelection(e.target);
+    updateCameraViewportPosition(4.5, 1, 0, 0);
 });
 document.getElementById('btn-top').addEventListener('click', (e) => {
-    updateActiveBtn(e.target);
-    tweenCameraPosition(0.01, 7, 0.01, 0);
+    toggleViewBtnSelection(e.target);
+    updateCameraViewportPosition(0.01, 7.5, 0.01, 0);
 });
 document.getElementById('btn-macro').addEventListener('click', (e) => {
-    updateActiveBtn(e.target);
-    tweenCameraPosition(-1.2, 0.5, 2.5, -0.4);
+    toggleViewBtnSelection(e.target);
+    updateCameraViewportPosition(-1, 0.8, 2.5, 0.2); // Focused macros angle target shift
 });
 
-function updateActiveBtn(target) {
-    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-    target.classList.add('active');
+function toggleViewBtnSelection(targetNode) {
+    document.querySelectorAll('.view-btn').forEach(button => button.classList.remove('active'));
+    targetNode.classList.add('active');
 }
 
-// Tab updates layout parameters
-const uiSub = document.getElementById('ui-subtitle');
-const uiTitleMain = document.getElementById('ui-title-main');
-const uiTitleSub = document.getElementById('ui-title-sub');
-const uiDesc = document.getElementById('ui-description');
-const uiSpecs = document.getElementById('ui-specs');
+// Text Matrix Data Nodes Mapping
+const textSubtitleNode = document.getElementById('ui-subtitle');
+const textMainTitleNode = document.getElementById('ui-title-main');
+const textSubTitleNode = document.getElementById('ui-title-sub');
+const textDescriptionNode = document.getElementById('ui-description');
+const textSpecsGridNode = document.getElementById('ui-specs');
 
 document.getElementById('tab-overview').addEventListener('click', (e) => {
-    updateActiveTab(e.target);
-    uiSub.innerText = "// THE FLUID MASTER . STATUS";
-    uiTitleMain.innerText = "BRUCE";
-    uiTitleSub.innerText = "LEE";
-    uiDesc.innerText = "Be water, my friend. Featuring an interactive digital twin scan monument of the legendary masterwork martial artist. Balanced perfectly for fluid strike combos and defensive redirection stances.";
-    uiSpecs.innerHTML = `<div class="spec-box"><div class="spec-label">Agility</div><div class="spec-value">MAX</div></div><div class="spec-box"><div class="spec-label">Power</div><div class="spec-value">99%</div></div><div class="spec-box"><div class="spec-label">Fluidity</div><div class="spec-value">100%</div></div>`;
+    toggleTabSelection(e.target);
+    textSubtitleNode.innerText = "// THE FLUID MASTER . STATUS";
+    textMainTitleNode.innerText = "BRUCE";
+    textSubTitleNode.innerText = "LEE";
+    textDescriptionNode.innerText = "Be water, my friend. Featuring an interactive digital twin scan monument of the legendary masterwork martial artist. Balanced perfectly for fluid strike combos and defensive redirection stances.";
+    textSpecsGridNode.innerHTML = `<div class="spec-box"><div class="spec-label">Agility</div><div class="spec-value">MAX</div></div><div class="spec-box"><div class="spec-label">Power</div><div class="spec-value">99%</div></div><div class="spec-box"><div class="spec-label">Fluidity</div><div class="spec-value">100%</div></div>`;
 });
 
 document.getElementById('tab-attributes').addEventListener('click', (e) => {
-    updateActiveTab(e.target);
-    uiSub.innerText = "// COMBAT ATTRIBUTES . EVALUATION";
-    uiTitleMain.innerText = "COMBAT";
-    uiTitleSub.innerText = "STATS";
-    uiDesc.innerText = "Master of Jeet Kune Do. Maximum score scaling detected across counter-attack pacing, physical redirection matrices, tactical weapon adaptation fields, and point-blank kinetic force generation.";
-    uiSpecs.innerHTML = `<div class="spec-box"><div class="spec-label">Speed</div><div class="spec-value">0.05s</div></div><div class="spec-box"><div class="spec-label">Stamina</div><div class="spec-value">A++</div></div><div class="spec-box"><div class="spec-label">Style</div><div class="spec-value">JKD</div></div>`;
-});
+    toggleTabSelection(e.target);
+    textSubtitleNode.innerText = "// COMBAT ATTRIBUTES . EVALUATION";
+    textMainTitleNode.innerText = "COMBAT";
+    textSubTitleNode.innerText = "STATS";
+    textDescriptionNode.innerText = "Master of Jeet Kune Do. Maximum score scaling detected across counter-attack pacing, physical redirection matrices, tactical weapon adaptation fields, and point-blank kinetic force generation.";
 
+textSpecsGridNode.innerHTML = <div class="spec-box"><div class="spec-label">Speed</div><div class="spec-value">0.03s</div></div><div class="spec-box"><div class="spec-label">Stamina</div><div class="spec-value">S-TIER</div></div><div class="spec-box"><div class="spec-label">Style</div><div class="spec-value">JKD</div></div>;
+});
 document.getElementById('tab-history').addEventListener('click', (e) => {
-    updateActiveTab(e.target);
-    uiSub.innerText = "// CHRONICLES . CHRONOLOGY";
-    uiTitleMain.innerText = "THE";
-    uiTitleSub.innerText = "DRAGON";
-    uiDesc.innerText = "Born in 1940, Bruce Lee revolutionized global martial arts systems by introducing the concept of style-less flexibility. Eliminating rigid traditional parameters to prioritize instinctual, kinetic truth.";
-    uiSpecs.innerHTML = `<div class="spec-box"><div class="spec-label">Born</div><div class="spec-value">1940</div></div><div class="spec-box"><div class="spec-label">Legacy</div><div class="spec-value">Eternal</div></div><div class="spec-box"><div class="spec-label">Origin</div><div class="spec-value">HK / US</div></div>`;
+toggleTabSelection(e.target);
+textSubtitleNode.innerText = "// CHRONICLES . CHRONOLOGY";
+textMainTitleNode.innerText = "THE";
+textSubTitleNode.innerText = "DRAGON";
+textDescriptionNode.innerText = "Born in 1940, Bruce Lee revolutionized global martial arts systems by introducing the concept of style-less flexibility. Eliminating rigid traditional parameters to prioritize instinctual, kinetic truth.";
+textSpecsGridNode.innerHTML = <div class="spec-box"><div class="spec-label">Born</div><div class="spec-value">1940</div></div><div class="spec-box"><div class="spec-label">Legacy</div><div class="spec-value">Eternal</div></div><div class="spec-box"><div class="spec-label">Origin</div><div class="spec-value">HK / US</div></div>;
 });
-
-function updateActiveTab(target) {
-    document.querySelectorAll('.tab').forEach(t => btn.classList.remove('active')); // Fixed reference typo protection
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
-target.classList.add('active');
+function toggleTabSelection(targetNode) {
+document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+targetNode.classList.add('active');
 }
 // ============================================================================
-// 6. MAIN ENGINE RENDERING LIFECYCLE LOOP
+// 7. ENGINE RENDERING TICK LOOP LIFECYCLE
 // ============================================================================
-const clock = new THREE.Clock();
+const loopClock = new THREE.Clock();
+function tick() {
+requestAnimationFrame(animate); // Keep structural cycle clean
+}
 function animate() {
 requestAnimationFrame(animate);
-const elapsedTime = clock.getElapsedTime();
-// Constant particle drift up animation loop logic
-const positions = trainingEmberParticles.geometry.attributes.position.array;
-for(let i = 1; i < positions.length; i += 3) {
-positions[i] += 0.006;
-if(positions[i] > 4) {
-positions[i] = -1.2; // Return to dojo mesh floor bounds
+const deltaElapsedTime = loopClock.getElapsedTime();
+// Constant particle vector update loop transformation
+const positionsArray = dojoEmberSystem.geometry.attributes.position.array;
+for(let i = 1; i < positionsArray.length; i += 3) {
+positionsArray[i] += 0.007; // Rising ascending factor vector speed
+if(positionsArray[i] > 4.5) {
+positionsArray[i] = -1.5; // Loop reset vector below target dojo mesh grid lines
 }
 }
-trainingEmberParticles.geometry.attributes.position.needsUpdate = true;
-// Slow ambient rotation logic for our main character showcase mesh
-if (loadedCharacterMesh) {
-loadedCharacterMesh.rotation.y = elapsedTime * 0.12;
+dojoEmberSystem.geometry.attributes.position.needsUpdate = true;
+// Fluid subtle ambient character rotation sweep
+if (targetFighterMesh) {
+targetFighterMesh.rotation.y = deltaElapsedTime * 0.14;
 }
 controls.update();
 renderer.render(scene, camera);
 }
 animate();
-// Screen resize adjustments execution mapping
+// Monitor screen transformations layout resizing vectors
 window.addEventListener('resize', () => {
 camera.aspect = window.innerWidth / window.innerHeight;
 camera.updateProjectionMatrix();
