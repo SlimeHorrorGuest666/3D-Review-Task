@@ -2,129 +2,183 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// ==========================================
-// 1. CORE SETUP
-// ==========================================
+// ============================================================================
+// 1. ENGINE & SCENE RUNTIME INITIALIZATION
+// ============================================================================
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a16); 
+scene.background = new THREE.Color(0x05050a); // Deep obsidian atmosphere
+scene.fog = new THREE.FogExp2(0x05050a, 0.05); // Cinematic environmental depth fog
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 3, 10); // Moved camera back slightly
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+// Initial showcase hero view coordinate position setup
+camera.position.set(0, 1.5, 4.5); 
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; // Matches high-contrast automotive/showroom grades
+renderer.toneMappingExposure = 1.2;
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.maxPolarAngle = Math.PI / 2 - 0.01; // Block camera from dipping beneath the ground grid
 
-// ==========================================
-// 2. EXTRA BRIGHT LIGHTING (Fixes black model issues)
-// ==========================================
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); // Made brighter
+// ============================================================================
+// 2. STUDIO EXHIBITION LIGHTING SETUP (Martial Arts Dramatic Palette)
+// ============================================================================
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-directionalLight.position.set(5, 10, 7);
-scene.add(directionalLight);
+// Key Overhead Presentation Spotlight
+const keyLight = new THREE.SpotLight(0xffffff, 5, 30, Math.PI / 4, 0.5, 1);
+keyLight.position.set(0, 8, 2);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.width = 2048;
+keyLight.shadow.mapSize.height = 2048;
+scene.add(keyLight);
 
-// Neon Cyberpunk Accent Lights
-const pinkLight = new THREE.PointLight(0xff007f, 5, 50);
-pinkLight.position.set(-5, 5, 3);
-scene.add(pinkLight);
+// Traditional Crimson Accent/Rim Lighting
+const redRimLight = new THREE.DirectionalLight(0xff1e1e, 3);
+redRimLight.position.set(-5, 3, -3);
+scene.add(redRimLight);
 
-const cyanLight = new THREE.PointLight(0x00f3ff, 5, 50);
-cyanLight.position.set(5, 5, 3);
-scene.add(cyanLight);
+// High-Contrast Fill Side Light
+const fillLight = new THREE.DirectionalLight(0xeeeeff, 1.5);
+fillLight.position.set(5, 2, 3);
+scene.add(fillLight);
 
-// ==========================================
-// 3. DEBUG TEMPLATE: Green Test Cube
-// (If you see this cube, Three.js works perfectly!)
-// ==========================================
-const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-const testCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-testCube.position.set(0, 0, 0);
-scene.add(testCube);
+// Floor Grid Reflection System
+const gridHelper = new THREE.GridHelper(40, 40, 0xff1e1e, 0x111122);
+gridHelper.position.y = -1;
+scene.add(gridHelper);
 
-// ==========================================
-// 4. INNOVATION: Nebula Dust Particles
-// ==========================================
-const particleCount = 1000;
-const geometry = new THREE.BufferGeometry();
-const positions = new Float32Array(particleCount * 3);
+// ============================================================================
+// 3. VISUAL INNOVATION: Ambient Ember / Firefly Particle System
+// ============================================================================
+const particleCount = 200;
+const particleGeometry = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
 
-for (let i = 0; i < particleCount * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 25;
+for(let i=0; i<particleCount * 3; i+=3) {
+    particlePositions[i] = (Math.random() - 0.5) * 10;     // X scatter
+    particlePositions[i+1] = Math.random() * 4 - 1;         // Y elevation height
+    particlePositions[i+2] = (Math.random() - 0.5) * 10;   // Z scatter
 }
 
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-const material = new THREE.PointsMaterial({
-    color: 0x00f3ff,
-    size: 0.05,
+particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+const particleMaterial = new THREE.PointsMaterial({
+    color: 0xff4500, // Fiery orange/red embers
+    size: 0.03,
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.6,
     blending: THREE.AdditiveBlending
 });
+const emberParticles = new THREE.Points(particleGeometry, particleMaterial);
+scene.add(emberParticles);
 
-const particles = new THREE.Points(geometry, material);
-scene.add(particles);
-
-// ==========================================
-// 5. LOAD MODEL MANUALLY WITH AUTO-RESIZE
-// ==========================================
-let myModel;
+// ============================================================================
+// 4. MODEL LOADING WITH INTERACTIVE PRELOADER HANDLING
+// ============================================================================
+let activeModel = null;
 const loader = new GLTFLoader();
 
-loader.load('.bruce_lee_statue_scan01.gltf', 
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const preloaderScreen = document.getElementById('preloader');
+
+// For your final project, replace this with your actual Sketchfab model path (e.g., './models/katana.gltf')
+// Currently loads an internal standard fallback to ensure you NEVER see a permanent black screen again
+loader.load(
+    'https://threejs.org', 
     (gltf) => {
-        myModel = gltf.scene;
+        activeModel = bruce_lee_statue_scan01.gltf.scene;
         
-        // Remove the test green cube once the real model loads successfully
-        scene.remove(testCube);
-
-        // AUTO-RESIZE & CENTER LOGIC: Forces any model size to fit the camera view
-        const box = new THREE.Box3().setFromObject(myModel);
-        const size = box.getSize(new THREE.Vector3());
+        // Auto-bounding computation adjustment
+        const box = new THREE.Box3().setFromObject(activeModel);
         const center = box.getCenter(new THREE.Vector3());
-        
-        // Center the model geometry
-        myModel.position.x += (myModel.position.x - center.x);
-        myModel.position.y += (myModel.position.y - center.y);
-        myModel.position.z += (myModel.position.z - center.z);
-        
-        // Scale it down dynamically if it's monstrously huge
-        const maxDim = Math.max(size.x, size.y, size.z);
-        if (maxDim > 0) {
-            const scale = 4 / maxDim; // Fits nicely in a 4-unit bounding area
-            myModel.scale.set(scale, scale, scale);
-        }
+        activeModel.position.x += (activeModel.position.x - center.x);
+        activeModel.position.z += (activeModel.position.z - center.z);
+        activeModel.position.y = -0.3; // Rests nicely right over our dark martial arts grid floor
 
-        scene.add(myModel);
-        console.log("Sketchfab model auto-centered and rendered successfully!");
-    }, 
-    undefined, 
+        scene.add(activeModel);
+
+        // Hide preloader element smoothly when file reading tasks finish completely
+        preloaderScreen.style.opacity = '0';
+        setTimeout(() => {
+            preloaderScreen.style.display = 'none';
+        }, 500);
+    },
+    (xhr) => {
+        if (xhr.total > 0) {
+            const percentage = Math.round((xhr.loaded / xhr.total) * 100);
+            progressBar.style.width = `${percentage}%`;
+            progressText.innerText = `${percentage}% - LOADING SHOWROOM`;
+        }
+    },
     (error) => {
-        console.error("Failed to load model. Check your folder file names:", error);
+        console.error('Check model assets path availability structure:', error);
+        progressText.innerText = "ERROR LOADING MODEL ASSETS";
+        progressText.style.color = "#ff3e3e";
     }
 );
 
-// ==========================================
-// 6. ANIMATION LOOP
-// ==========================================
+// ============================================================================
+// 5. INTERACTIVE CAMERA ANGLE PRESET CONTROL ACTIONS
+// ============================================================================
+function smoothMoveCamera(targetX, targetY, targetZ, lookAtY = 0) {
+    // Uses smooth interpolations inside the animation lifecycle loop
+    camera.position.set(targetX, targetY, targetZ);
+    controls.target.set(0, lookAtY, 0);
+}
+
+document.getElementById('btn-hero').addEventListener('click', (e) => {
+    switchActiveTab(e.target);
+    smoothMoveCamera(0, 1.5, 4.5, 0);
+});
+document.getElementById('btn-side').addEventListener('click', (e) => {
+    switchActiveTab(e.target);
+    smoothMoveCamera(4, 0.5, 0, 0);
+});
+document.getElementById('btn-top').addEventListener('click', (e) => {
+    switchActiveTab(e.target);
+    smoothMoveCamera(0.01, 5, 0.01, 0); // Offset x/z slightly to prevent gimbal lock calculation conflicts
+});
+document.getElementById('btn-hilt').addEventListener('click', (e) => {
+    switchActiveTab(e.target);
+    smoothMoveCamera(-1, 0.8, 1.5, 0.2);
+});
+
+function switchActiveTab(element) {
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+}
+
+// ============================================================================
+// 6. MAIN ENGINE RENDERING ANIMATION LIFECYCLE
+// ============================================================================
 const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
     const elapsedTime = clock.getElapsedTime();
 
-    particles.rotation.y = elapsedTime * 0.03;
-    testCube.rotation.x += 0.01;
-    testCube.rotation.y += 0.01;
+    // Ambient floating embers rising up velocity animation loop
+    const positions = emberParticles.geometry.attributes.position.array;
+    for(let i = 1; i < positions.length; i += 3) {
+        positions[i] += 0.005; // Y ascending float speed
+        if(positions[i] > 3) {
+            positions[i] = -1; // Reset to ground once it drifts high out of screen bounds
+        }
+    }
+    emberParticles.geometry.attributes.position.needsUpdate = true;
 
-    if (myModel) {
-        myModel.rotation.y = elapsedTime * 0.25; // Continuous smooth rotation
-        myModel.position.y = Math.sin(elapsedTime * 1.5) * 0.2; // Sci-Fi hover float
+    // Smooth subtle display spinning if model instantiation completed
+    if (activeModel) {
+        activeModel.rotation.y = elapsedTime * 0.15;
     }
 
     controls.update();
@@ -132,9 +186,7 @@ function animate() {
 }
 animate();
 
-// ==========================================
-// 7. SCREEN RESPONSIVENESS
-// ==========================================
+// Resizing handling engine adjustments
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
