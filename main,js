@@ -95,7 +95,7 @@ const preloaderScreen = document.getElementById('preloader');
 loader.load(
     'https://threejs.org', 
     (gltf) => {
-        activeModel = bruce_lee_statue_scan01.gltf.scene;
+        activeModel = gltf.scene;
         
         // Auto-bounding computation adjustment
         const box = new THREE.Box3().setFromObject(activeModel);
