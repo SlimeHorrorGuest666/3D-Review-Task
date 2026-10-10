@@ -90,7 +90,7 @@ const progressText = document.getElementById('progress-text');
 const preloaderScreen = document.getElementById('preloader');
 
 // REPLACEMENT PIPELINE DIRECTION:
-// To run your raw downloaded Sketchfab package local asset data, use: './models/scene.gltf'
+// To run your raw downloaded Sketchfab package local asset data, use: './bruce_lee_statue_scan01.gltf'
 // Currently loading from a secure public repository to guarantee the loading screen finishes online instantly.
 gltfLoader.load(
     'https://githubusercontent.com', 
