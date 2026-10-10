@@ -90,12 +90,12 @@ const progressText = document.getElementById('progress-text');
 const preloaderScreen = document.getElementById('preloader');
 
 // REPLACEMENT PIPELINE DIRECTION:
-// To run your raw downloaded Sketchfab package local asset data, use: './bruce_lee_statue_scan01.gltf'
+// To run your raw downloaded Sketchfab package local asset data, use: './models/scene.gltf'
 // Currently loading from a secure public repository to guarantee the loading screen finishes online instantly.
 gltfLoader.load(
     'https://githubusercontent.com', 
     (gltf) => {
-        targetFighterMesh = gltf.scene;
+        targetFighterMesh = bruce_lee_statue_scan01.gltf;
         
         // Compute structural geometry box size vectors
         const boundingBox = new THREE.Box3().setFromObject(targetFighterMesh);
