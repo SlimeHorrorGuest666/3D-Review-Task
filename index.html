@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Martial Arts 3D Showroom</title>
+    <title>Bruce Lee Stance 3D Dashboard</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #05050a; color: #fff; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
 
-        /* UI Overlays */
+        /* UI HUD Layout Layer */
         .ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; }
         .interactive { pointer-events: auto; }
         
@@ -21,41 +21,41 @@
         .tab { padding: 8px 20px; font-size: 12px; text-transform: uppercase; font-weight: 600; cursor: pointer; border-radius: 15px; color: #aaa; transition: 0.3s; }
         .tab.active { background: #ff3e3e; color: #fff; }
 
-        /* Sidebar Content */
+        /* Sidebar Info Wrapper */
         .main-content { max-width: 400px; margin-top: 60px; }
         .subtitle { color: #ff3e3e; font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
         h1 { font-size: 64px; margin: 0; font-weight: 900; text-transform: uppercase; line-height: 0.9; letter-spacing: -1px; }
         .stroke-text { -webkit-text-stroke: 1px rgba(255,255,255,0.4); color: transparent; font-size: 54px; font-weight: 800; display: block; }
         .description { color: #8a8a9e; font-size: 13px; line-height: 1.6; margin: 20px 0; }
 
-        /* Spec Badges */
+        /* Stat Grid Widgets */
         .specs-grid { display: flex; gap: 15px; margin-bottom: 30px; }
-        .spec-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 8px; min-width: 90px; text-align: left; }
+        .spec-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 8px; min-width: 90px; text-align: left; transition: 0.2s; }
         .spec-box:hover { border-color: #ff3e3e; background: rgba(255, 62, 62, 0.05); }
         .spec-label { font-size: 10px; color: #666677; text-transform: uppercase; font-weight: bold; }
         .spec-value { font-size: 18px; font-weight: 700; margin-top: 5px; color: #f5f5f7; }
 
-        /* Primary Action Button */
+        /* Training Mode Trigger */
         .btn-primary { background: #ff3e3e; color: white; border: none; padding: 14px 28px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s; width: max-content; }
-        .btn-primary:hover { background: #e02f2f; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 62, 62, 0.2); }
+        .btn-primary:hover { background: #e02f2f; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 62, 62, 0.3); }
 
-        /* Footer View Controls */
+        /* Bottom Presets Row */
         footer { display: flex; justify-content: center; width: 100%; }
         .view-controls { display: flex; background: rgba(10, 10, 20, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
         .view-btn { background: transparent; border: none; color: #666677; padding: 12px 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.3s; border-right: 1px solid rgba(255,255,255,0.05); }
         .view-btn:last-child { border: none; }
         .view-btn.active, .view-btn:hover { background: rgba(255, 62, 62, 0.15); color: #ff3e3e; }
 
-        /* PRELOADER SCREEN OVERLAY (Bypasses Local Black Screens) */
-        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #07070c; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
+        /* PROGRESS PRELOADER SCREEN OVERLAY */
+        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #07070c; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
         .loader-logo { font-size: 32px; font-weight: 900; letter-spacing: 5px; margin-bottom: 20px; color: #fff; }
         .loader-logo span { color: #ff3e3e; }
-        .progress-bar-container { width: 300px; height: 2px; background: rgba(255,255,255,0.1); position: relative; }
-        #progress-bar { width: 0%; height: 100%; background: #ff3e3e; position: absolute; top:0; left:0; transition: width 0.1s; }
-        #progress-text { font-size: 11px; color: #555566; margin-top: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .progress-bar-container { width: 300px; height: 3px; background: rgba(255,255,255,0.1); position: relative; border-radius: 2px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: #ff3e3e; position: absolute; top:0; left:0; transition: width 0.1s ease-out; }
+        #progress-text { font-size: 11px; color: #66667e; margin-top: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
     </style>
 
-    <!-- CDN Configuration Map for Vanilla Deployment Outside Node Environments -->
+    <!-- Importmap allows module execution across all modern browsers natively -->
     <script type="importmap">
       {
         "imports": {
@@ -67,16 +67,16 @@
 </head>
 <body>
 
-    <!-- PRELOADER OVERLAY -->
+    <!-- ASSET BUFFERING PRELOADER OVERLAY -->
     <div id="preloader">
-        <div class="loader-logo">MARTIAL<span>DASHBOARD</span></div>
+        <div class="loader-logo">BRUCE<span>LEE</span></div>
         <div class="progress-bar-container">
             <div id="progress-bar"></div>
         </div>
-        <div id="progress-text">0% - INITIALIZING DOJO</div>
+        <div id="progress-text">0% - LOADING MARTIAL GEAR</div>
     </div>
 
-    <!-- UI DASHBOARD CONTAINER -->
+    <!-- MAIN DASHBOARD CONTENT HUD -->
     <div class="ui-container">
         <header class="interactive">
             <div class="logo">☯ JEET KUNE DO <span>SHOWROOM</span></div>
@@ -113,15 +113,14 @@
 
         <footer>
             <div class="view-controls interactive">
-                <button class="view-btn active" id="btn-hero">Hero View</button>
+                <button class="view-btn active" id="btn-hero">Front View</button>
                 <button class="view-btn" id="btn-side">Profile Zoom</button>
                 <button class="view-btn" id="btn-top">Top Down</button>
-                <button class="view-btn" id="btn-macro">Stance Macro</button>
+                <button class="view-btn" id="btn-macro">Stance Close-Up</button>
             </div>
         </footer>
     </div>
 
-    <!-- Core Pipeline Module -->
     <script type="module" src="main.js"></script>
 </body>
 </html>
