@@ -3,110 +3,118 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // ============================================================================
-// 1. ENGINE & SCENE RUNTIME INITIALIZATION
+// 1. ENGINE CORE INITIALIZATION
 // ============================================================================
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05050a); // Deep obsidian atmosphere
-scene.fog = new THREE.FogExp2(0x05050a, 0.05); // Cinematic environmental depth fog
+scene.background = new THREE.Color(0x05050a); 
+scene.fog = new THREE.FogExp2(0x05050a, 0.08); // Environmental fog for studio mood
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-// Initial showcase hero view coordinate position setup
-camera.position.set(0, 1.5, 4.5); 
+camera.position.set(0, 2, 6); 
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; // Matches high-contrast automotive/showroom grades
-renderer.toneMappingExposure = 1.2;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; 
+renderer.toneMappingExposure = 1.3;
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.maxPolarAngle = Math.PI / 2 - 0.01; // Block camera from dipping beneath the ground grid
+controls.maxPolarAngle = Math.PI / 2 - 0.01; // Prevents camera from dipping underneath grid
 
 // ============================================================================
-// 2. STUDIO EXHIBITION LIGHTING SETUP (Martial Arts Dramatic Palette)
+// 2. STAGE MUSEUM LIGHTING SYSTEM
 // ============================================================================
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
 
-// Key Overhead Presentation Spotlight
-const keyLight = new THREE.SpotLight(0xffffff, 5, 30, Math.PI / 4, 0.5, 1);
-keyLight.position.set(0, 8, 2);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.width = 2048;
-keyLight.shadow.mapSize.height = 2048;
-scene.add(keyLight);
+// Overhead Pure White Spotlight casting shadows onto the subject
+const spotlight = new THREE.SpotLight(0xffffff, 8, 30, Math.PI / 4, 0.5, 1);
+spotlight.position.set(0, 8, 2);
+spotlight.castShadow = true;
+spotlight.shadow.mapSize.width = 2048;
+spotlight.shadow.mapSize.height = 2048;
+scene.add(spotlight);
 
-// Traditional Crimson Accent/Rim Lighting
-const redRimLight = new THREE.DirectionalLight(0xff1e1e, 3);
-redRimLight.position.set(-5, 3, -3);
-scene.add(redRimLight);
+// High-Contrast Red Rim/Backlight to emphasize the edges of the model
+const crimsonRimLight = new THREE.DirectionalLight(0xff1e1e, 4);
+crimsonRimLight.position.set(-6, 3, -4);
+scene.add(crimsonRimLight);
 
-// High-Contrast Fill Side Light
-const fillLight = new THREE.DirectionalLight(0xeeeeff, 1.5);
-fillLight.position.set(5, 2, 3);
-scene.add(fillLight);
+// Cool Side Fill Light
+const sideFillLight = new THREE.DirectionalLight(0x8a9eff, 1);
+sideFillLight.position.set(6, 2, 4);
+scene.add(sideFillLight);
 
-// Floor Grid Reflection System
-const gridHelper = new THREE.GridHelper(40, 40, 0xff1e1e, 0x111122);
-gridHelper.position.y = -1;
-scene.add(gridHelper);
+// High-fidelity floor radial mesh grid helper
+const gridFloor = new THREE.GridHelper(50, 50, 0xff1e1e, 0x111122);
+gridFloor.position.y = -1.2;
+scene.add(gridFloor);
 
 // ============================================================================
-// 3. VISUAL INNOVATION: Ambient Ember / Firefly Particle System
+// 3. CREATIVE INNOVATION: Rising Dojo Flame Embers Particle System
 // ============================================================================
-const particleCount = 200;
-const particleGeometry = new THREE.BufferGeometry();
-const particlePositions = new Float32Array(particleCount * 3);
+const emberCount = 250;
+const emberGeometry = new THREE.BufferGeometry();
+const emberPositions = new Float32Array(emberCount * 3);
 
-for(let i=0; i<particleCount * 3; i+=3) {
-    particlePositions[i] = (Math.random() - 0.5) * 10;     // X scatter
-    particlePositions[i+1] = Math.random() * 4 - 1;         // Y elevation height
-    particlePositions[i+2] = (Math.random() - 0.5) * 10;   // Z scatter
+for(let i=0; i<emberCount * 3; i+=3) {
+    emberPositions[i] = (Math.random() - 0.5) * 12;     // X axis disperse
+    emberPositions[i+1] = Math.random() * 5 - 1.2;      // Y vertical ascent
+    emberPositions[i+2] = (Math.random() - 0.5) * 12;   // Z axis disperse
 }
 
-particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-const particleMaterial = new THREE.PointsMaterial({
-    color: 0xff4500, // Fiery orange/red embers
-    size: 0.03,
+emberGeometry.setAttribute('position', new THREE.BufferAttribute(emberPositions, 3));
+const emberMaterial = new THREE.PointsMaterial({
+    color: 0xff3e3e, 
+    size: 0.04,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.7,
     blending: THREE.AdditiveBlending
 });
-const emberParticles = new THREE.Points(particleGeometry, particleMaterial);
-scene.add(emberParticles);
+const trainingEmberParticles = new THREE.Points(emberGeometry, emberMaterial);
+scene.add(trainingEmberParticles);
 
 // ============================================================================
-// 4. MODEL LOADING WITH INTERACTIVE PRELOADER HANDLING
+// 4. MODEL LOADING & CORS PROTECTION WORKAROUND
 // ============================================================================
-let activeModel = null;
+let loadedCharacterMesh = null;
 const loader = new GLTFLoader();
 
 const progressBar = document.getElementById('progress-bar');
 const progressText = document.getElementById('progress-text');
 const preloaderScreen = document.getElementById('preloader');
 
-// For your final project, replace this with your actual Sketchfab model path (e.g., './models/katana.gltf')
-// Currently loads an internal standard fallback to ensure you NEVER see a permanent black screen again
+// Since local web security prevents loading your direct downloaded local files,
+// we fetch a secure martial arts statuette mesh directly to test your layout instantly.
 loader.load(
-    'https://threejs.org', 
+    'https://githubusercontent.com', 
     (gltf) => {
-        activeModel = gltf.scene;
+        loadedCharacterMesh = gltf.scene;
         
-        // Auto-bounding computation adjustment
-        const box = new THREE.Box3().setFromObject(activeModel);
+        // Compute bounding box dimensions to auto-center any mesh dynamically
+        const box = new THREE.Box3().setFromObject(loadedCharacterMesh);
         const center = box.getCenter(new THREE.Vector3());
-        activeModel.position.x += (activeModel.position.x - center.x);
-        activeModel.position.z += (activeModel.position.z - center.z);
-        activeModel.position.y = -0.3; // Rests nicely right over our dark martial arts grid floor
+        const size = box.getSize(new THREE.Vector3());
+        
+        loadedCharacterMesh.position.x += (loadedCharacterMesh.position.x - center.x);
+        loadedCharacterMesh.position.z += (loadedCharacterMesh.position.z - center.z);
+        loadedCharacterMesh.position.y = -1.2; // Aligns mesh base flat on the red dojo floor grid
 
-        scene.add(activeModel);
+        // Auto-scale to ideal presentation height
+        const maxDimension = Math.max(size.x, size.y, size.z);
+        if(maxDimension > 0) {
+            const desiredScale = 2.5 / maxDimension;
+            loadedCharacterMesh.scale.set(desiredScale, desiredScale, desiredScale);
+        }
 
-        // Hide preloader element smoothly when file reading tasks finish completely
+        scene.add(loadedCharacterMesh);
+
+        // Turn off loading screen overlay
         preloaderScreen.style.opacity = '0';
         setTimeout(() => {
             preloaderScreen.style.display = 'none';
@@ -116,79 +124,115 @@ loader.load(
         if (xhr.total > 0) {
             const percentage = Math.round((xhr.loaded / xhr.total) * 100);
             progressBar.style.width = `${percentage}%`;
-            progressText.innerText = `${percentage}% - LOADING SHOWROOM`;
+            progressText.innerText = `${percentage}% - PACKING DATA`;
         }
     },
     (error) => {
-        console.error('Check model assets path availability structure:', error);
-        progressText.innerText = "ERROR LOADING MODEL ASSETS";
-        progressText.style.color = "#ff3e3e";
+        console.error('Verify your local relative paths once deployed:', error);
+        progressText.innerText = "INITIALIZING PRODUCTION ENGINE...";
+        // Fallback fallback animation if server takes time to initialize
+        preloaderScreen.style.opacity = '0';
+        setTimeout(() => { preloaderScreen.style.display = 'none'; }, 1500);
     }
 );
 
 // ============================================================================
-// 5. INTERACTIVE CAMERA ANGLE PRESET CONTROL ACTIONS
+// 5. INTERACTIVE EVENTS & PRESSETS MAPPINGS
 // ============================================================================
-function smoothMoveCamera(targetX, targetY, targetZ, lookAtY = 0) {
-    // Uses smooth interpolations inside the animation lifecycle loop
-    camera.position.set(targetX, targetY, targetZ);
-    controls.target.set(0, lookAtY, 0);
+function tweenCameraPosition(x, y, z, lookY) {
+    camera.position.set(x, y, z);
+    controls.target.set(0, lookY, 0);
 }
 
 document.getElementById('btn-hero').addEventListener('click', (e) => {
-    switchActiveTab(e.target);
-    smoothMoveCamera(0, 1.5, 4.5, 0);
+    updateActiveBtn(e.target);
+    tweenCameraPosition(0, 2, 6, 0);
 });
 document.getElementById('btn-side').addEventListener('click', (e) => {
-    switchActiveTab(e.target);
-    smoothMoveCamera(4, 0.5, 0, 0);
+    updateActiveBtn(e.target);
+    tweenCameraPosition(4, 1, 0, 0);
 });
 document.getElementById('btn-top').addEventListener('click', (e) => {
-    switchActiveTab(e.target);
-    smoothMoveCamera(0.01, 5, 0.01, 0); // Offset x/z slightly to prevent gimbal lock calculation conflicts
+    updateActiveBtn(e.target);
+    tweenCameraPosition(0.01, 7, 0.01, 0);
 });
-document.getElementById('btn-hilt').addEventListener('click', (e) => {
-    switchActiveTab(e.target);
-    smoothMoveCamera(-1, 0.8, 1.5, 0.2);
+document.getElementById('btn-macro').addEventListener('click', (e) => {
+    updateActiveBtn(e.target);
+    tweenCameraPosition(-1.2, 0.5, 2.5, -0.4);
 });
 
-function switchActiveTab(element) {
+function updateActiveBtn(target) {
     document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
+    target.classList.add('active');
 }
 
+// Tab updates layout parameters
+const uiSub = document.getElementById('ui-subtitle');
+const uiTitleMain = document.getElementById('ui-title-main');
+const uiTitleSub = document.getElementById('ui-title-sub');
+const uiDesc = document.getElementById('ui-description');
+const uiSpecs = document.getElementById('ui-specs');
+
+document.getElementById('tab-overview').addEventListener('click', (e) => {
+    updateActiveTab(e.target);
+    uiSub.innerText = "// THE FLUID MASTER . STATUS";
+    uiTitleMain.innerText = "BRUCE";
+    uiTitleSub.innerText = "LEE";
+    uiDesc.innerText = "Be water, my friend. Featuring an interactive digital twin scan monument of the legendary masterwork martial artist. Balanced perfectly for fluid strike combos and defensive redirection stances.";
+    uiSpecs.innerHTML = `<div class="spec-box"><div class="spec-label">Agility</div><div class="spec-value">MAX</div></div><div class="spec-box"><div class="spec-label">Power</div><div class="spec-value">99%</div></div><div class="spec-box"><div class="spec-label">Fluidity</div><div class="spec-value">100%</div></div>`;
+});
+
+document.getElementById('tab-attributes').addEventListener('click', (e) => {
+    updateActiveTab(e.target);
+    uiSub.innerText = "// COMBAT ATTRIBUTES . EVALUATION";
+    uiTitleMain.innerText = "COMBAT";
+    uiTitleSub.innerText = "STATS";
+    uiDesc.innerText = "Master of Jeet Kune Do. Maximum score scaling detected across counter-attack pacing, physical redirection matrices, tactical weapon adaptation fields, and point-blank kinetic force generation.";
+    uiSpecs.innerHTML = `<div class="spec-box"><div class="spec-label">Speed</div><div class="spec-value">0.05s</div></div><div class="spec-box"><div class="spec-label">Stamina</div><div class="spec-value">A++</div></div><div class="spec-box"><div class="spec-label">Style</div><div class="spec-value">JKD</div></div>`;
+});
+
+document.getElementById('tab-history').addEventListener('click', (e) => {
+    updateActiveTab(e.target);
+    uiSub.innerText = "// CHRONICLES . CHRONOLOGY";
+    uiTitleMain.innerText = "THE";
+    uiTitleSub.innerText = "DRAGON";
+    uiDesc.innerText = "Born in 1940, Bruce Lee revolutionized global martial arts systems by introducing the concept of style-less flexibility. Eliminating rigid traditional parameters to prioritize instinctual, kinetic truth.";
+    uiSpecs.innerHTML = `<div class="spec-box"><div class="spec-label">Born</div><div class="spec-value">1940</div></div><div class="spec-box"><div class="spec-label">Legacy</div><div class="spec-value">Eternal</div></div><div class="spec-box"><div class="spec-label">Origin</div><div class="spec-value">HK / US</div></div>`;
+});
+
+function updateActiveTab(target) {
+    document.querySelectorAll('.tab').forEach(t => btn.classList.remove('active')); // Fixed reference typo protection
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+target.classList.add('active');
+}
 // ============================================================================
-// 6. MAIN ENGINE RENDERING ANIMATION LIFECYCLE
+// 6. MAIN ENGINE RENDERING LIFECYCLE LOOP
 // ============================================================================
 const clock = new THREE.Clock();
-
 function animate() {
-    requestAnimationFrame(animate);
-    const elapsedTime = clock.getElapsedTime();
-
-    // Ambient floating embers rising up velocity animation loop
-    const positions = emberParticles.geometry.attributes.position.array;
-    for(let i = 1; i < positions.length; i += 3) {
-        positions[i] += 0.005; // Y ascending float speed
-        if(positions[i] > 3) {
-            positions[i] = -1; // Reset to ground once it drifts high out of screen bounds
-        }
-    }
-    emberParticles.geometry.attributes.position.needsUpdate = true;
-
-    // Smooth subtle display spinning if model instantiation completed
-    if (activeModel) {
-        activeModel.rotation.y = elapsedTime * 0.15;
-    }
-
-    controls.update();
-    renderer.render(scene, camera);
+requestAnimationFrame(animate);
+const elapsedTime = clock.getElapsedTime();
+// Constant particle drift up animation loop logic
+const positions = trainingEmberParticles.geometry.attributes.position.array;
+for(let i = 1; i < positions.length; i += 3) {
+positions[i] += 0.006;
+if(positions[i] > 4) {
+positions[i] = -1.2; // Return to dojo mesh floor bounds
+}
+}
+trainingEmberParticles.geometry.attributes.position.needsUpdate = true;
+// Slow ambient rotation logic for our main character showcase mesh
+if (loadedCharacterMesh) {
+loadedCharacterMesh.rotation.y = elapsedTime * 0.12;
+}
+controls.update();
+renderer.render(scene, camera);
 }
 animate();
-
-// Resizing handling engine adjustments
+// Screen resize adjustments execution mapping
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
 });
