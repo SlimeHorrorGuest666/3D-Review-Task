@@ -6,10 +6,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // 1. CORE SETUP
 // ==========================================
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a16); // Sci-Fi Dark Background
+scene.background = new THREE.Color(0x0a0a16); 
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 2, 5);
+camera.position.set(0, 3, 10); // Moved camera back slightly
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -19,36 +19,51 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
 // ==========================================
-// 2. CREATIVE LIGHTING (Neon Palette)
+// 2. EXTRA BRIGHT LIGHTING (Fixes black model issues)
 // ==========================================
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); // Made brighter
 scene.add(ambientLight);
 
-const pinkLight = new THREE.PointLight(0xff007f, 3, 50);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+directionalLight.position.set(5, 10, 7);
+scene.add(directionalLight);
+
+// Neon Cyberpunk Accent Lights
+const pinkLight = new THREE.PointLight(0xff007f, 5, 50);
 pinkLight.position.set(-5, 5, 3);
 scene.add(pinkLight);
 
-const cyanLight = new THREE.PointLight(0x00f3ff, 3, 50);
+const cyanLight = new THREE.PointLight(0x00f3ff, 5, 50);
 cyanLight.position.set(5, 5, 3);
 scene.add(cyanLight);
 
 // ==========================================
-// 3. INNOVATION: Interactive Floating Nebula Particles
+// 3. DEBUG TEMPLATE: Green Test Cube
+// (If you see this cube, Three.js works perfectly!)
+// ==========================================
+const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+const testCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+testCube.position.set(0, 0, 0);
+scene.add(testCube);
+
+// ==========================================
+// 4. INNOVATION: Nebula Dust Particles
 // ==========================================
 const particleCount = 1000;
 const geometry = new THREE.BufferGeometry();
 const positions = new Float32Array(particleCount * 3);
 
 for (let i = 0; i < particleCount * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 15;
+    positions[i] = (Math.random() - 0.5) * 25;
 }
 
 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 const material = new THREE.PointsMaterial({
     color: 0x00f3ff,
-    size: 0.04,
+    size: 0.05,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.8,
     blending: THREE.AdditiveBlending
 });
 
@@ -56,26 +71,46 @@ const particles = new THREE.Points(geometry, material);
 scene.add(particles);
 
 // ==========================================
-// 4. LOAD MODEL MANUALLY FROM FOLDER
+// 5. LOAD MODEL MANUALLY WITH AUTO-RESIZE
 // ==========================================
 let myModel;
 const loader = new GLTFLoader();
 
-// Make sure your model files inside the folder are named 'scene.gltf'
-loader.load('./models/bruce_lee_statue_scan01.gltf', 
+loader.load('.bruce_lee_statue_scan01.gltf', 
     (gltf) => {
         myModel = gltf.scene;
+        
+        // Remove the test green cube once the real model loads successfully
+        scene.remove(testCube);
+
+        // AUTO-RESIZE & CENTER LOGIC: Forces any model size to fit the camera view
+        const box = new THREE.Box3().setFromObject(myModel);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        // Center the model geometry
+        myModel.position.x += (myModel.position.x - center.x);
+        myModel.position.y += (myModel.position.y - center.y);
+        myModel.position.z += (myModel.position.z - center.z);
+        
+        // Scale it down dynamically if it's monstrously huge
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0) {
+            const scale = 4 / maxDim; // Fits nicely in a 4-unit bounding area
+            myModel.scale.set(scale, scale, scale);
+        }
+
         scene.add(myModel);
-        console.log("Model successfully loaded!");
+        console.log("Sketchfab model auto-centered and rendered successfully!");
     }, 
     undefined, 
     (error) => {
-        console.error("Error loading model. Check your file paths:", error);
+        console.error("Failed to load model. Check your folder file names:", error);
     }
 );
 
 // ==========================================
-// 5. ANIMATION LOOP
+// 6. ANIMATION LOOP
 // ==========================================
 const clock = new THREE.Clock();
 
@@ -83,13 +118,13 @@ function animate() {
     requestAnimationFrame(animate);
     const elapsedTime = clock.getElapsedTime();
 
-    // Rotate particles ambiently
-    particles.rotation.y = elapsedTime * 0.05;
+    particles.rotation.y = elapsedTime * 0.03;
+    testCube.rotation.x += 0.01;
+    testCube.rotation.y += 0.01;
 
-    // Creative effect: Make the loaded model bob up and down smoothly
     if (myModel) {
-        myModel.rotation.y = elapsedTime * 0.2;
-        myModel.position.y = Math.sin(elapsedTime * 1.5) * 0.15;
+        myModel.rotation.y = elapsedTime * 0.25; // Continuous smooth rotation
+        myModel.position.y = Math.sin(elapsedTime * 1.5) * 0.2; // Sci-Fi hover float
     }
 
     controls.update();
@@ -98,7 +133,7 @@ function animate() {
 animate();
 
 // ==========================================
-// 6. SCREEN RESPONSIVENESS
+// 7. SCREEN RESPONSIVENESS
 // ==========================================
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
